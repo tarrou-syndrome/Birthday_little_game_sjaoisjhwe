@@ -1466,7 +1466,7 @@ def ekran_podsumowanie():
 # Router
 # ---------------------------------------------------------------------------
 
-ekran = "podsumowanie"
+ekran = st.session_state.get("ekran", "start")
 if ekran == "start":
     ekran_start()
 elif ekran == "gra":
