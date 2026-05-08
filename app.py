@@ -255,17 +255,23 @@ def _reset_pamiec():
     st.session_state.pamiec_ukonczona = False
 
 
-# Wykryj wygraną Snake'a sygnalizowaną przez JS przez query param
+# Wykryj wygraną Snake'a sygnalizowaną przez JS przez query param.
+# Uwaga: NIE nadpisujemy `ekran` – inaczej po kliknięciu przycisku
+# "Przejdź do gry pamięciowej" kolejny rerun wymuszałby powrót na ekran snake.
 if st.query_params.get("snake_done") == "1":
     st.session_state.snake_ukonczony = True
-    del st.query_params["snake_done"]
-    st.session_state.ekran = "snake"
+    try:
+        del st.query_params["snake_done"]
+    except KeyError:
+        pass
 
 # Wykryj wygraną Runnera sygnalizowaną przez JS przez query param
 if st.query_params.get("runner_done") == "1":
     st.session_state.runner_ukonczony = True
-    del st.query_params["runner_done"]
-    st.session_state.ekran = "runner"
+    try:
+        del st.query_params["runner_done"]
+    except KeyError:
+        pass
 
 
 if "ekran" not in st.session_state:
@@ -857,18 +863,12 @@ def ekran_snake():
             clearInterval(tickHandle);
             if (victory) {{
                 if (level < LEVELS.length - 1) {{
-                    statusEl.textContent = "🎉 Poziom " + (level+1) + " ukończony! Kliknij \\"Następny poziom\\".";
+                    statusEl.textContent = "🎉 Poziom " + (level+1) + " ukończony! Możesz przejść dalej lub zagrać kolejny poziom.";
                     statusEl.style.color = "#2f9e44";
                     nextBtn.style.display = "inline-block";
                 }} else {{
                     statusEl.textContent = "🏆 Brawo! Ukończyłaś wszystkie 3 poziomy! Przejdź do gry pamięciowej.";
                     statusEl.style.color = "#2f9e44";
-                    // Zasygnalizuj Streamlitowi wygraną przez query param
-                    try {{
-                        const url = new URL(window.parent.location.href);
-                        url.searchParams.set("snake_done", "1");
-                        window.parent.location.replace(url.toString());
-                    }} catch (e) {{}}
                 }}
             }} else {{
                 statusEl.textContent = "💥 Ups! Spróbuj jeszcze raz ten sam poziom.";
@@ -905,22 +905,17 @@ def ekran_snake():
     components.html(html, height=720)
 
     st.markdown("---")
-    snake_ok = st.session_state.get("snake_ukonczony", False)
-    if snake_ok:
-        st.success("🏆 Snake ukończony! Możesz przejść dalej.")
+    st.caption("Po wygraniu pierwszego poziomu możesz przejść dalej albo zagrać kolejne poziomy dla większego wyzwania.")
     col_a, col_b, col_c = st.columns([1, 1, 1])
     with col_b:
         if st.button(
             "🧠 Przejdź do gry pamięciowej",
             use_container_width=True,
             type="primary",
-            disabled=not snake_ok,
         ):
             _reset_pamiec()
             st.session_state.ekran = "pamiec"
             st.rerun()
-        if not snake_ok:
-            st.caption("Najpierw wygraj wszystkie 3 poziomy Snake'a.")
     with col_a:
         if st.button("← Wróć do wyboru", use_container_width=True):
             st.session_state.ekran = "wybor"
@@ -1285,13 +1280,8 @@ def ekran_runner():
                         scoreEl.textContent = score;
                         if (score >= TARGET) {{
                             won = true;
-                            statusEl.textContent = "🏆 Brawo! Zebrałaś wszystkie prezenty!";
+                            statusEl.textContent = "🏆 Brawo! Zebrałaś wszystkie prezenty! Możesz teraz odebrać prezenty.";
                             statusEl.style.color = "#2f9e44";
-                            try {{
-                                const url = new URL(window.parent.location.href);
-                                url.searchParams.set("runner_done", "1");
-                                window.parent.location.replace(url.toString());
-                            }} catch (e) {{}}
                         }}
                     }}
                 }}
@@ -1345,21 +1335,16 @@ def ekran_runner():
     components.html(html, height=520)
 
     st.markdown("---")
-    runner_ok = st.session_state.get("runner_ukonczony", False)
-    if runner_ok:
-        st.success("🏆 Bieg ukończony! Możesz odebrać prezenty.")
+    st.caption("Gdy zbierzesz wszystkie prezenty (lub gdy chcesz się poddać) – kliknij poniżej, aby odebrać prezenty.")
     col_a, col_b, col_c = st.columns([1, 1, 1])
     with col_b:
         if st.button(
             "🎁 Odbierz prezenty",
             use_container_width=True,
             type="primary",
-            disabled=not runner_ok,
         ):
             st.session_state.ekran = "podsumowanie"
             st.rerun()
-        if not runner_ok:
-            st.caption("Najpierw zbierz wszystkie prezenty w grze biegowej.")
     with col_a:
         if st.button("← Wróć do memory", use_container_width=True):
             st.session_state.ekran = "pamiec"
@@ -1371,6 +1356,69 @@ def ekran_runner():
 # ---------------------------------------------------------------------------
 
 def ekran_podsumowanie():
+    # Tło podsumowania jest przezroczyste – widać animowane chmury z ekranu startowego.
+    # Teksty są białe z mocnym cieniem, żeby były czytelne na jasnym/ruchomym tle.
+    st.markdown(
+        """
+        <style>
+        /* Główny kontener przezroczysty – widać tło (chmurki) */
+        [data-testid="stMain"] .block-container {
+            background: transparent !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+        }
+        /* Białe teksty z czytelnym cieniem */
+        [data-testid="stMain"] h1,
+        [data-testid="stMain"] h2,
+        [data-testid="stMain"] h3,
+        [data-testid="stMain"] p,
+        [data-testid="stMain"] label,
+        [data-testid="stMain"] .stMarkdown,
+        [data-testid="stMain"] .stMarkdown p,
+        [data-testid="stMain"] .stMarkdown li {
+            color: #ffffff !important;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.75), 0 0 2px rgba(0,0,0,0.6) !important;
+        }
+        /* Przycisk "Pobierz listę (.txt)" – białe tło, biały tekst nie byłby widoczny,
+           więc dajemy biały tekst na półprzezroczystym ciemnym tle dla czytelności */
+        [data-testid="stMain"] [data-testid="stDownloadButton"] button {
+            background: rgba(0,0,0,0.45) !important;
+            color: #ffffff !important;
+            border: 2px solid rgba(255,255,255,0.8) !important;
+            font-weight: 600 !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.6) !important;
+        }
+        [data-testid="stMain"] [data-testid="stDownloadButton"] button:hover {
+            background: rgba(0,0,0,0.65) !important;
+            border-color: #ffffff !important;
+        }
+        /* Expander "Pokaż treść listy (do skopiowania)" – białe napisy */
+        [data-testid="stMain"] details summary,
+        [data-testid="stMain"] details summary * ,
+        [data-testid="stMain"] [data-testid="stExpander"] summary,
+        [data-testid="stMain"] [data-testid="stExpander"] summary * {
+            color: #ffffff !important;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.75) !important;
+        }
+        [data-testid="stMain"] [data-testid="stExpander"] {
+            background: transparent !important;
+            border: 1px solid rgba(255,255,255,0.5) !important;
+            border-radius: 10px !important;
+        }
+        /* Pole tekstowe e-mail – ciemne tło, biały tekst, czytelne na chmurach */
+        [data-testid="stMain"] .stTextInput input {
+            background: rgba(0,0,0,0.35) !important;
+            color: #ffffff !important;
+            border: 1.5px solid rgba(255,255,255,0.7) !important;
+        }
+        [data-testid="stMain"] .stTextInput input::placeholder {
+            color: rgba(255,255,255,0.7) !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
     st.markdown("<h1 style='text-align:center;'>🎉 Twoje prezenty 🎉</h1>", unsafe_allow_html=True)
     st.balloons()
 
