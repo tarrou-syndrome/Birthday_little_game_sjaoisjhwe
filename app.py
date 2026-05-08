@@ -162,7 +162,7 @@ PREZENTY = [
 
 ROZMIAR_TALI = 12          # używane tylko jako fallback – faktyczna talia ma tyle kart, ile prezentów
 MAX_ODKRYC = 6             # ile kart można maksymalnie odkryć
-BUDZET_DIAMENTOW = 5       # budżet do wyboru prezentów na końcu (w diamentach)
+BUDZET_DIAMENTOW = 6       # budżet do wyboru prezentów na końcu (w diamentach)
 
 PREZENTY_DIR = PICTURES_DIR / "prezenty"
 
