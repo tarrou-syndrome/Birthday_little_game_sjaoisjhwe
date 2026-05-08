@@ -78,25 +78,32 @@ st.markdown(
     <style>
     /* Wszystkie karty */
     div[class*="st-key-karta_"] .stButton > button {
-        min-height: 200px;
+        min-height: 280px;
         border-radius: 16px;
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 600;
         box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         transition: transform 0.15s ease, box-shadow 0.15s ease;
         white-space: pre-wrap;
-        line-height: 1.4;
+        line-height: 1.5;
     }
     div[class*="st-key-karta_"] .stButton > button:hover {
         transform: translateY(-3px);
         box-shadow: 0 8px 16px rgba(0,0,0,0.25);
     }
 
-    /* Karta zakryta */
+    /* Karta zakryta – duży emoji 🎴 jako pierwsza linia */
     div[class*="st-key-karta_zakryta"] .stButton > button {
         background: linear-gradient(135deg, #845ef7, #5f3dc4);
         color: white;
         border: none;
+        font-size: 22px;
+    }
+    div[class*="st-key-karta_zakryta"] .stButton > button p:first-child,
+    div[class*="st-key-karta_zakryta"] .stButton > button > div > p:first-child {
+        font-size: 110px;
+        line-height: 1.1;
+        margin: 0 0 8px 0;
     }
 
     /* Karta odkryta (przycisk wyłączony, ale stylizowany na złoto) */
@@ -465,8 +472,8 @@ def karta_widget(idx: int, pozostalo: int):
             unsafe_allow_html=True,
         )
     else:
-        # Cała karta jako klikalny przycisk
-        label = f"# 🎴\n\n**Karta #{idx + 1}**\n\nKliknij, aby odkryć"
+        # Cała karta jako klikalny przycisk – duży emoji + opis
+        label = f"🎴\n\nKarta #{idx + 1}\n\nKliknij, aby odkryć"
         with st.container(key=f"karta_zakryta_{idx}"):
             if st.button(
                 label,
